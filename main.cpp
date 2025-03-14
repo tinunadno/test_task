@@ -5,8 +5,11 @@
 #include <unordered_map>
 #include <cmath>
 #include <algorithm>
-#include <ncurses.h>
 
+#ifdef __unix__
+#define UNIX_USER
+#include <ncurses.h>
+#endif
 
 
 namespace map_processing {
@@ -432,6 +435,7 @@ namespace map_processing {
                 string current_command;
                 string last_message;
                 while (true) {
+#ifdef UNIX_USER
                     if (cool_mode_enabled) {
                         erase();
                         draw_all_instances_lines(hs_table);
@@ -474,7 +478,9 @@ namespace map_processing {
                         last_station_trace = station_traces;
                         was_trace = true;
                         last_message = "last command: '" + current_command + "'";
-                    } else {
+                    }
+#endif
+                    if (!cool_mode_enabled) {
                         getline(cin, current_command);
                         strip(current_command);
                         transform(current_command.begin(), current_command.end(), current_command.begin(), ::toupper);
@@ -484,6 +490,8 @@ namespace map_processing {
                         if (current_command == "HELP") {
                             commandProcessor->print_command_descriptions();
                         } else if (current_command == "COOLMODE") {
+
+#ifdef UNIX_USER
                             cout << "WARNING!" <<endl << "in coolmode only STATTRACE and HOUSEREL are available!" << endl << "continue[y/n]";
                             string temp;
                             getline(cin, temp);
@@ -496,6 +504,9 @@ namespace map_processing {
                             cbreak();
                             noecho();
                             keypad(stdscr, TRUE);
+#else
+                            std::cout << "WARNING: to use cool mode, you have to install ncurce" << endl << "type 'sudo apt-get install libncurses5-dev libncursesw5-dev' to do this\n";
+#endif
                         } else {
                             cout << commandProcessor->process_command(current_command) << endl;
                         }
@@ -506,7 +517,8 @@ namespace map_processing {
 
         private:
 
-            void draw_all_instances_lines(shared_ptr<HouseStationTable> &hs_table) {
+#ifdef UNIX_USER
+            static void draw_all_instances_lines(shared_ptr<HouseStationTable> &hs_table) {
                 for (auto i: hs_table->house_station_table) {
                     House current_house = hs_table->house_table[i.first];
                     Station current_station = hs_table->station_table[i.second];
@@ -514,7 +526,7 @@ namespace map_processing {
                 }
             }
 
-            void draw_instance_lines(House& current_house, Station& current_station, uint32_t max_x, uint32_t max_y, char c){
+            static void draw_instance_lines(House& current_house, Station& current_station, uint32_t max_x, uint32_t max_y, char c){
                 float s_x = (float) current_station.x_center / (float) max_x;
                 float s_y = (float) current_station.y_center / (float) max_y;
                 float h_x = (float) current_house.x_center / (float) max_x;
@@ -522,7 +534,7 @@ namespace map_processing {
                 cool_mode_draw_line(s_x, s_y, h_x, h_y, c);
             }
 
-            void subscribe_all_instances(shared_ptr<HouseStationTable> &hs_table) {
+            static void subscribe_all_instances(shared_ptr<HouseStationTable> &hs_table) {
                 for (auto i: hs_table->house_table) {
                     House ch = i.second;
                     float h_x = (hs_table->max_x != 0) ? static_cast<float>(ch.x_center) / static_cast<float>(hs_table->max_x) : 0;
@@ -571,8 +583,8 @@ namespace map_processing {
                 int maxY, maxX;
                 getmaxyx(stdscr, maxY, maxX);
 
-                int x = static_cast<int>(x_norm * maxX);
-                int y = static_cast<int>(y_norm * (maxY - 2)) + 1;
+                int x = static_cast<int>(x_norm * (float)maxX);
+                int y = static_cast<int>(y_norm * (float)(maxY - 2)) + 1;
 
                 int len = static_cast<int>(text.length());
                 int startX = x - len / 2;
@@ -586,10 +598,10 @@ namespace map_processing {
                 int maxY, maxX;
                 getmaxyx(stdscr, maxY, maxX);
 
-                int x1 = static_cast<int>(maxX * x_1);
-                int y1 = static_cast<int>((maxY - 2) * y_1) + 1;
-                int x2 = static_cast<int>(maxX * x_2);
-                int y2 = static_cast<int>((maxY - 2) * y_2) + 1;
+                int x1 = static_cast<int>((float)maxX * x_1);
+                int y1 = static_cast<int>((float)(maxY - 2) * y_1) + 1;
+                int x2 = static_cast<int>((float)maxX * x_2);
+                int y2 = static_cast<int>((float)(maxY - 2) * y_2) + 1;
 
                 int dx = std::abs(x2 - x1);
                 int dy = std::abs(y2 - y1);
@@ -615,7 +627,7 @@ namespace map_processing {
                     }
                 }
             }
-
+#endif
             bool cool_mode_enabled = false;
         };
     }
