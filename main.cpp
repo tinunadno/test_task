@@ -5,6 +5,9 @@
 #include <unordered_map>
 #include <cmath>
 #include <algorithm>
+#include <ncurses.h>
+
+
 
 namespace map_processing {
     using namespace std;
@@ -45,6 +48,7 @@ namespace map_processing {
     class DataProcessor {
     public:
         DataProcessor() = default;
+
         virtual shared_ptr<ProcessingData> process(shared_ptr<ProcessingData>) = 0;
 
         virtual ~DataProcessor() = default;
@@ -129,6 +133,8 @@ namespace map_processing {
 
             vector<House> houses;
             vector<Station> stations;
+            uint32_t max_x{};
+            uint32_t max_y{};
         };
 
         class HouseStationTable : public ProcessingData {
@@ -136,6 +142,8 @@ namespace map_processing {
             unordered_map<size_t, size_t> house_station_table;
             unordered_map<size_t, House> house_table;
             unordered_map<size_t, Station> station_table;
+            size_t max_x{};
+            size_t max_y{};
         };
     }
 
@@ -147,26 +155,32 @@ namespace map_processing {
 
         class CommandProcessor {
         public:
-            explicit CommandProcessor(shared_ptr<HouseStationTable>& hs_table)
+            explicit CommandProcessor(shared_ptr<HouseStationTable> &hs_table)
                     : hs_table(hs_table) {
                 command_map["SELECT"] = &CommandProcessor::handle_select;
                 command_map["SHOW"] = &CommandProcessor::handle_show;
                 command_map["STATTRACE"] = &CommandProcessor::handle_stat_trace;
                 command_map["HOUSEREL"] = &CommandProcessor::handle_house_rel;
-                command_descriptions.emplace_back("SELECT", "[syntax: SELECT <HOUSES/STATIONS> <index>] show house or station with certain index");
-                command_descriptions.emplace_back("SHOW", "[syntax: SHOW <HOUSES/STATIONS>] show all instances of house or station");
-                command_descriptions.emplace_back("STATTRACE", "[syntax: STATTRACE <index>] showing all the houses, connected to a certain station");
-                command_descriptions.emplace_back("HOUSEREL", "[syntax: HOUSEREL <index/ALL>] showing all houses and stations they are connected");
+                cool_mode_command_map["STATTRACE"] = &CommandProcessor::handle_station_trace_for_cool_mode;
+                cool_mode_command_map["HOUSEREL"] = &CommandProcessor::handle_select_house_for_cool_mode;
+                command_descriptions.emplace_back("SELECT",
+                                                  "[syntax: SELECT <HOUSES/STATIONS> <index>] show house or station with certain index");
+                command_descriptions.emplace_back("SHOW",
+                                                  "[syntax: SHOW <HOUSES/STATIONS>] show all instances of house or station");
+                command_descriptions.emplace_back("STATTRACE",
+                                                  "[syntax: STATTRACE <index>] showing all the houses, connected to a certain station");
+                command_descriptions.emplace_back("HOUSEREL",
+                                                  "[syntax: HOUSEREL <index/ALL>] showing all houses and stations they are connected");
             }
 
-            void print_command_descriptions(){
+            void print_command_descriptions() {
                 cout << "AVAILABLE COMMANDS:" << endl;
-                for(const auto& i: command_descriptions){
+                for (const auto &i: command_descriptions) {
                     cout << i.first << ": " << i.second << endl;
                 }
             }
 
-            string process_command(const string& command) {
+            string process_command(const string &command) {
                 string stripped_command = command;
                 strip(stripped_command);
 
@@ -188,8 +202,39 @@ namespace map_processing {
                 return "INVALID COMMAND, type help to see all available commands";
             }
 
+            pair<size_t, vector<size_t>> process_command_for_cool_mode(string &command) {
+                string stripped_command = command;
+                strip(stripped_command);
+
+                size_t split_index = find_split_index(stripped_command);
+                if (split_index == string::npos) {
+                    return {};
+                }
+
+                string command_name = stripped_command.substr(0, split_index);
+                string command_rest = stripped_command.substr(split_index + 1);
+
+                transform(command_name.begin(), command_name.end(), command_name.begin(), ::toupper);
+
+                auto it = cool_mode_command_map.find(command_name);
+                if (it != cool_mode_command_map.end()) {
+                    return (this->*(it->second))(command_rest);
+                }
+
+                return {};
+            }
+
         private:
-            string handle_select(string& args) {
+            pair<size_t, vector<size_t>> handle_select_house_for_cool_mode(string &args) {
+                return house_rel_by_index_for_cool_mode(args);
+            }
+
+            pair<size_t, vector<size_t>> handle_station_trace_for_cool_mode(string &args) {
+                transform(args.begin(), args.end(), args.begin(), ::toupper);
+                return station_trace_for_cool_mode(stoi(args));
+            }
+
+            string handle_select(string &args) {
                 size_t split_index = find_split_index(args);
                 if (split_index == string::npos) {
                     return "INVALID SELECT COMMAND, type help to see all available commands";
@@ -200,27 +245,27 @@ namespace map_processing {
                 return select_command(table_name, index);
             }
 
-            string handle_show(string& args) {
+            string handle_show(string &args) {
                 transform(args.begin(), args.end(), args.begin(), ::toupper);
                 return show_command(args);
             }
 
-            string handle_stat_trace(string& args) {
+            string handle_stat_trace(string &args) {
                 transform(args.begin(), args.end(), args.begin(), ::toupper);
                 return station_trace(stoi(args));
             }
 
-            string handle_house_rel(string& args){
-                if(args == "ALL"){
+            string handle_house_rel(string &args) {
+                if (args == "ALL") {
                     return house_relations(args);
-                }else{
+                } else {
                     return house_rel_by_index(args);
                 }
             }
 
-            static size_t find_split_index(const string& str) {
+            static size_t find_split_index(const string &str) {
                 const string attempt_characters = " \t";
-                for (char c : attempt_characters) {
+                for (char c: attempt_characters) {
                     size_t index = str.find(c);
                     if (index != string::npos) {
                         return index;
@@ -229,7 +274,21 @@ namespace map_processing {
                 return string::npos;
             }
 
-            string select_command(const string& table_name, size_t index) {
+            pair<size_t, vector<size_t>> house_rel_by_index_for_cool_mode(string &args) {
+                size_t house_index = stoi(args);
+                auto it = hs_table->house_table.find(house_index);
+                if (it == hs_table->house_table.end()) {
+                    return {};
+                }
+                pair<size_t, vector<size_t>> ret;
+                size_t station_index = hs_table->house_station_table[house_index];
+                ret.first = station_index;
+                vector<size_t> house = {house_index};
+                ret.second = house;
+                return ret;
+            }
+
+            string select_command(const string &table_name, size_t index) {
                 if (table_name == "HOUSE") {
                     auto it = hs_table->house_table.find(index);
                     if (it == hs_table->house_table.end()) {
@@ -246,17 +305,17 @@ namespace map_processing {
                 return "NO MATCHING TABLE FOUND!";
             }
 
-            string show_command(const string& table_name) {
+            string show_command(const string &table_name) {
                 string ret;
                 if (table_name == "HOUSE") {
-                    for (const auto& i : hs_table->house_station_table) {
+                    for (const auto &i: hs_table->house_station_table) {
                         auto current_house = hs_table->house_table[i.first];
-                        ret += house_to_string(current_house)+"\n";
+                        ret += house_to_string(current_house) + "\n";
                     }
                 } else if (table_name == "STATION") {
-                    for (const auto& i : hs_table->station_table) {
+                    for (const auto &i: hs_table->station_table) {
                         auto current_station = i.second;
-                        ret += station_to_string(current_station)+"\n";
+                        ret += station_to_string(current_station) + "\n";
                     }
                 } else {
                     ret = "NO MATCHING TABLE FOUND!";
@@ -264,14 +323,38 @@ namespace map_processing {
                 return ret;
             }
 
+            pair<size_t, vector<size_t>> station_trace_for_cool_mode(size_t station_index) {
+                if (hs_table->station_table.find(station_index) == hs_table->station_table.end()) {
+                    return {};
+                }
+                auto it = station_trace_cache.find(station_index);
+                if (it == station_trace_cache.end()) {
+                    vector<size_t> houses_belongs_to_station;
+                    for (const auto &i: hs_table->house_station_table) {
+                        if (i.second == station_index) {
+                            houses_belongs_to_station.push_back(i.first);
+                        }
+                    }
+                    station_trace_cache.insert({station_index, houses_belongs_to_station});
+                }
+                pair<size_t, vector<size_t>> ret;
+                ret.first = station_index;
+                vector<size_t> houses;
+                for (auto i: station_trace_cache[station_index]) {
+                    houses.push_back(i);
+                }
+                ret.second = houses;
+                return ret;
+            }
+
             string station_trace(size_t station_index) {
-                if (hs_table->station_table.find(station_index) == hs_table->station_table.end()){
+                if (hs_table->station_table.find(station_index) == hs_table->station_table.end()) {
                     return "NO MATCHING STATIONS FOUND";
                 }
                 auto it = station_trace_cache.find(station_index);
                 if (it == station_trace_cache.end()) {
                     vector<size_t> houses_belongs_to_station;
-                    for (const auto& i : hs_table->house_station_table) {
+                    for (const auto &i: hs_table->house_station_table) {
                         if (i.second == station_index) {
                             houses_belongs_to_station.push_back(i.first);
                         }
@@ -281,7 +364,7 @@ namespace map_processing {
                 string ret = station_to_string(hs_table->station_table[station_index]);
                 string houses;
                 size_t counter = 0;
-                for (auto i : station_trace_cache[station_index]) {
+                for (auto i: station_trace_cache[station_index]) {
                     counter++;
                     houses += "\t" + house_to_string(hs_table->house_table[i]) + "\n";
                 }
@@ -291,65 +374,249 @@ namespace map_processing {
                 return ret + " (TOTAL " + to_string(counter) + ") ->{\n" + houses + "}";
             }
 
-            string house_relations(string& args){
+            string house_relations(string &args) {
                 string ret;
-                for(auto i: hs_table->house_station_table){
-                    ret += house_to_string(hs_table->house_table[i.first]) + " <- " + station_to_string(hs_table->station_table[i.second]) + "\n";
+                for (auto i: hs_table->house_station_table) {
+                    ret += house_to_string(hs_table->house_table[i.first]) + " <- " +
+                           station_to_string(hs_table->station_table[i.second]) + "\n";
                 }
                 return ret;
             }
-            string house_rel_by_index(string& args){
+
+            string house_rel_by_index(string &args) {
                 size_t house_index = stoi(args);
                 auto it = hs_table->house_table.find(house_index);
-                if(it == hs_table->house_table.end()){
+                if (it == hs_table->house_table.end()) {
                     return "NO MATCHING HOUSES FOUND";
                 }
                 string ret;
                 size_t station_index = hs_table->house_station_table[house_index];
-                ret += house_to_string(hs_table->house_table[house_index]) + " -> " + station_to_string(hs_table->station_table[station_index]);
+                ret += house_to_string(hs_table->house_table[house_index]) + " -> " +
+                       station_to_string(hs_table->station_table[station_index]);
                 return ret;
             }
 
-            using CommandHandler = string (CommandProcessor::*)(string&);
+            using CommandHandler = string (CommandProcessor::*)(string &);
+            using CoolModeCommandHandler = pair<size_t, vector<size_t>> (CommandProcessor::*)(string &);
             unordered_map<string, CommandHandler> command_map;
             vector<pair<string, string>> command_descriptions;
+            unordered_map<string, CoolModeCommandHandler> cool_mode_command_map;
 
             shared_ptr<HouseStationTable> hs_table;
             unordered_map<size_t, vector<size_t>> station_trace_cache;
         };
     }
 
-    namespace UI{
+    namespace UI {
         using processing_types::HouseStationTable;
+        using processing_types::House;
+        using processing_types::Station;
+        using processing_types::house_to_string;
+        using processing_types::station_to_string;
         using tiny_database::CommandProcessor;
         using string_utils::strip;
 
         class ConsoleUI : public FinalProcessingUnit {
         public:
             ConsoleUI() = default;
-            void process(shared_ptr<ProcessingData> data) override{
-                cout << "type *help* to start\n";
+
+            void process(shared_ptr<ProcessingData> data) override {
+                cout << "type *help* to start, *exit* to leave\n";
                 auto hs_table = dynamic_pointer_cast<HouseStationTable>(data);
-                if(!hs_table){
+                if (!hs_table) {
                     throw ProcessingDataTypeMissmatch("Type missmatch in ConsoleUI: expected HouseStationTable!");
                 }
                 auto commandProcessor = new CommandProcessor(hs_table);
+                pair<size_t, vector<size_t>> last_station_trace;
+                bool was_trace = false;
                 string current_command;
-                while(true){
-                    getline(cin, current_command);
-                    strip(current_command);
-                    transform(current_command.begin(), current_command.end(), current_command.begin(), ::toupper);
-                    if(current_command == "EXIT"){
-                        break;
-                    }
-                    if(current_command == "HELP"){
-                        commandProcessor->print_command_descriptions();
-                    }else {
-                         cout << commandProcessor->process_command(current_command) << endl;
+                string last_message;
+                while (true) {
+                    if (cool_mode_enabled) {
+                        erase();
+                        draw_all_instances_lines(hs_table);
+                        if(was_trace) {
+                            Station current_station = hs_table->station_table[last_station_trace.first];
+                            for (auto i: last_station_trace.second) {
+                                House current_house = hs_table->house_table[i];
+                                draw_instance_lines(current_house, current_station, hs_table->max_x, hs_table->max_y, '@');
+                                refresh();
+                            }
+                        }
+                        subscribe_all_instances(hs_table);
+                        mvprintw(0, 0, "%s", last_message.c_str());
+                        refresh();
+
+                        current_command = cool_mode_get_command();
+                        strip(current_command);
+                        transform(current_command.begin(), current_command.end(), current_command.begin(), ::toupper);
+
+                        if (current_command == "EXIT") {
+                            endwin();
+                            break;
+                        }
+                        if (current_command == "COOLMODE") {
+                            endwin();
+                            cool_mode_enabled = !cool_mode_enabled;
+                            continue;
+                        }
+                        if (current_command == "HELP") {
+                            last_message = "WARNING: exit cool mode before typing *help*\n";
+                            continue;
+                        }
+
+                        pair<size_t, vector<size_t>> station_traces = commandProcessor->process_command_for_cool_mode(current_command);
+                        if (station_traces.second.empty()) {
+                            last_message = "INVALID COMMAND";
+                            continue;
+                        }
+
+                        last_station_trace = station_traces;
+                        was_trace = true;
+                        last_message = "last command: '" + current_command + "'";
+                    } else {
+                        getline(cin, current_command);
+                        strip(current_command);
+                        transform(current_command.begin(), current_command.end(), current_command.begin(), ::toupper);
+                        if (current_command == "EXIT") {
+                            break;
+                        }
+                        if (current_command == "HELP") {
+                            commandProcessor->print_command_descriptions();
+                        } else if (current_command == "COOLMODE") {
+                            cout << "WARNING!" <<endl << "in coolmode only STATTRACE and HOUSEREL are available!" << endl << "continue[y/n]";
+                            string temp;
+                            getline(cin, temp);
+                            strip(temp);
+                            if(temp != "y"){
+                                continue;
+                            }
+                            cool_mode_enabled = !cool_mode_enabled;
+                            initscr();
+                            cbreak();
+                            noecho();
+                            keypad(stdscr, TRUE);
+                        } else {
+                            cout << commandProcessor->process_command(current_command) << endl;
+                        }
                     }
                 }
                 delete commandProcessor;
             }
+
+        private:
+
+            void draw_all_instances_lines(shared_ptr<HouseStationTable> &hs_table) {
+                for (auto i: hs_table->house_station_table) {
+                    House current_house = hs_table->house_table[i.first];
+                    Station current_station = hs_table->station_table[i.second];
+                    draw_instance_lines(current_house, current_station, hs_table->max_x, hs_table->max_y, '#');
+                }
+            }
+
+            void draw_instance_lines(House& current_house, Station& current_station, uint32_t max_x, uint32_t max_y, char c){
+                float s_x = (float) current_station.x_center / (float) max_x;
+                float s_y = (float) current_station.y_center / (float) max_y;
+                float h_x = (float) current_house.x_center / (float) max_x;
+                float h_y = (float) current_house.y_center / (float) max_y;
+                cool_mode_draw_line(s_x, s_y, h_x, h_y, c);
+            }
+
+            void subscribe_all_instances(shared_ptr<HouseStationTable> &hs_table) {
+                for (auto i: hs_table->house_table) {
+                    House ch = i.second;
+                    float h_x = (hs_table->max_x != 0) ? static_cast<float>(ch.x_center) / static_cast<float>(hs_table->max_x) : 0;
+                    float h_y = (hs_table->max_y != 0) ? static_cast<float>(ch.y_center) / static_cast<float>(hs_table->max_y) : 0;
+                    cool_mode_draw_centered_text(h_x, h_y, "HOUSE" + to_string(ch.house_number));
+                }
+
+                for (auto i: hs_table->station_table) {
+                    Station cs = i.second;
+                    float s_x = (hs_table->max_x != 0) ? static_cast<float>(cs.x_center) / static_cast<float>(hs_table->max_x) : 0;
+                    float s_y = (hs_table->max_y != 0) ? static_cast<float>(cs.y_center) / static_cast<float>(hs_table->max_y) : 0;
+                    cool_mode_draw_centered_text(s_x, s_y, "STATION" + to_string(cs.station_number));
+                }
+            }
+
+            static string cool_mode_get_command() {
+                int maxY, maxX;
+                getmaxyx(stdscr, maxY, maxX);
+
+                move(maxY - 1, 0);
+                clrtoeol();
+                printw("input_your_command> ");
+                refresh();
+
+                string input;
+                int ch;
+                while ((ch = getch()) != '\n') {
+                    if (ch == KEY_BACKSPACE || ch == 127) {
+                        if (!input.empty()) {
+                            input.pop_back();
+                            addch('\b');
+                            addch(' ');
+                            addch('\b');
+                        }
+                    } else {
+                        input.push_back((char) ch);
+                        addch(ch);
+                    }
+                    refresh();
+                }
+
+                return input;
+            }
+
+            static void cool_mode_draw_centered_text(float x_norm, float y_norm, const std::string &text) {
+                int maxY, maxX;
+                getmaxyx(stdscr, maxY, maxX);
+
+                int x = static_cast<int>(x_norm * maxX);
+                int y = static_cast<int>(y_norm * (maxY - 2)) + 1;
+
+                int len = static_cast<int>(text.length());
+                int startX = x - len / 2;
+
+                if (startX >= 0 && startX + len <= maxX && y >= 0 && y < maxY) {
+                    mvprintw(y, startX, "%s", text.c_str());
+                }
+            }
+
+            static void cool_mode_draw_line(float x_1, float y_1, float x_2, float y_2, char ch) {
+                int maxY, maxX;
+                getmaxyx(stdscr, maxY, maxX);
+
+                int x1 = static_cast<int>(maxX * x_1);
+                int y1 = static_cast<int>((maxY - 2) * y_1) + 1;
+                int x2 = static_cast<int>(maxX * x_2);
+                int y2 = static_cast<int>((maxY - 2) * y_2) + 1;
+
+                int dx = std::abs(x2 - x1);
+                int dy = std::abs(y2 - y1);
+                int sx = (x1 < x2) ? 1 : -1;
+                int sy = (y1 < y2) ? 1 : -1;
+                int err = dx - dy;
+
+                while (true) {
+                    if (x1 >= 0 && x1 < maxX && y1 >= 1 && y1 < maxY) {
+                        mvaddch(y1, x1, ch);
+                    }
+
+                    if (x1 == x2 && y1 == y2) break;
+
+                    int e2 = 2 * err;
+                    if (e2 > -dy) {
+                        err -= dy;
+                        x1 += sx;
+                    }
+                    if (e2 < dx) {
+                        err += dx;
+                        y1 += sy;
+                    }
+                }
+            }
+
+            bool cool_mode_enabled = false;
         };
     }
 
@@ -477,6 +744,8 @@ namespace map_processing {
                         }
                     }
                 }
+                hs_set->max_x = hs_map->x_size;
+                hs_set->max_y = hs_map->y_size;
                 return hs_set;
             }
         };
@@ -500,7 +769,7 @@ namespace map_processing {
                     float min_distance = 100000000000.0f;
                     Station min_distance_station = {0};
                     for (auto j: hs_set->stations) {
-                        if(first_time){
+                        if (first_time) {
                             hs_table->station_table.insert({j.station_number, j});
                         }
                         float current_distance = distance_func(i.x_center, i.y_center, j.x_center, j.y_center);
@@ -515,27 +784,32 @@ namespace map_processing {
                         hs_table->house_station_table.insert({i.house_number, min_distance_station.station_number});
                     }
                 }
+                hs_table->max_x = hs_set->max_x;
+                hs_table->max_y = hs_set->max_y;
                 return hs_table;
             }
         };
 
     }
 
-    namespace pipeline{
+    namespace pipeline {
         using processing_types::TextData;
         using namespace IO;
         using namespace UI;
         using namespace processing_core;
         using namespace tiny_database;
-        class PipeLine{
+
+        class PipeLine {
         public:
-            explicit PipeLine(const vector<shared_ptr<DataProcessor>>& dp, shared_ptr<FinalProcessingUnit>& pl_ending): processors(dp), pipe_line_ending(pl_ending){}
-            void initiate_pipe_line(const shared_ptr<ProcessingData>& init_data){
+            explicit PipeLine(const vector<shared_ptr<DataProcessor>> &dp, shared_ptr<FinalProcessingUnit> &pl_ending)
+                    : processors(dp), pipe_line_ending(pl_ending) {}
+
+            void initiate_pipe_line(const shared_ptr<ProcessingData> &init_data) {
                 shared_ptr<ProcessingData> last_return = init_data;
-                while(true) {
+                while (true) {
                     try {
                         last_return = this->process_next(last_return);
-                        if(last_return == nullptr){
+                        if (last_return == nullptr) {
                             break;
                         }
                     } catch (ProcessingDataTypeMissmatch &e) {
@@ -545,20 +819,22 @@ namespace map_processing {
                     }
                 }
             }
-            shared_ptr<ProcessingData> process_next(shared_ptr<ProcessingData>& pd){
-                if(pipe_line_counter < processors.size()){
+
+            shared_ptr<ProcessingData> process_next(shared_ptr<ProcessingData> &pd) {
+                if (pipe_line_counter < processors.size()) {
                     return (processors[pipe_line_counter++])->process(pd);
                 }
                 pipe_line_ending->process(pd);
                 return nullptr;
             }
+
         private:
             vector<shared_ptr<DataProcessor>> processors;
             shared_ptr<FinalProcessingUnit> pipe_line_ending;
             size_t pipe_line_counter = 0;
         };
 
-        void start_map_processing(string& file_name){
+        void start_map_processing(string &file_name) {
             auto td = make_shared<TextData>();
             td->text = file_name;
             vector<shared_ptr<DataProcessor>> pd = {
