@@ -21,6 +21,6 @@
 
 ### пример работы *coolmode*
 
-![Screencast from 2025-03-15 16-01-26 (2).gif](Screencast%20from%202025-03-15%2016-01-26%20%282%29.gif)
+![example](content/example.gif)
 
 **качество гифки низкое из-за конвертации**
