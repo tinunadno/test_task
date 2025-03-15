@@ -4,11 +4,11 @@
 
 1.[master](https://github.com/tinunadno/test_task/tree/master) - решение с большим упором на структуру и расширяемость
 
-2.cool_console_mode - то-же решение, что и в master, но с более комплексным консольным интерфейсом
+2.cool_mode_for_console - то-же решение, что и в master, но с более комплексным консольным интерфейсом
 
-3.[simple_solution](https://github.com/tinunadno/test_task/tree/simple_solution) - максимально простое и последовательное решение, где реализация максимально соответствует ТЗ
+3.[simple_solution_branch](https://github.com/tinunadno/test_task/tree/simple_solution_branch) - максимально простое и последовательное решение, где реализация максимально соответствует ТЗ
 
-*описание непосредственно алгоритма и оценки его сложности я приложил в ветке [simple_solution](https://github.com/tinunadno/test_task/tree/simple_solution)*
+*описание непосредственно алгоритма и оценки его сложности я приложил в ветке [simple_solution_branch](https://github.com/tinunadno/test_task/tree/simple_solution_branch)*
 
 ## Описание решения
 
