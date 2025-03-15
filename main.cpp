@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "map_processing/map_processing.h"
+#include "map_processing/map_processing_exceptions.h"
 
 using namespace map_processing;
 
@@ -11,7 +12,11 @@ int main(int argc, char* argv[]) {
         return 1;
     }
     std::string file_name = argv[1];
-    auto file = read_file(file_name);
-    auto data = complete_grid_trace(file);
-    start_console_gui(data);
+    try {
+        auto file = read_file(file_name);
+        auto data = complete_grid_trace(file);
+        start_console_gui(data);
+    }catch(ProcessingException& e){
+        cerr << e.what() << endl;
+    }
 }

@@ -23,24 +23,7 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="9a77bb91-28bd-446d-98f2-7a53f1bba650" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug/.cmake/api/v1/reply/codemodel-v2-1ccc1fa0966b48ef8cf5.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug/.cmake/api/v1/reply/index-2025-03-15T11-48-32-0194.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug/.cmake/api/v1/reply/target-test_task-Debug-2901ca9d8deee922be5a.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug/.ninja_deps" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/.ninja_deps" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug/.ninja_log" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/.ninja_log" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/test_task.dir/main.cpp.o" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/test_task.dir/main.cpp.o" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug/Testing/Temporary/LastTest.log" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/Testing/Temporary/LastTest.log" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug/build.ninja" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/build.ninja" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug/test_task" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/test_task" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/main.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/map_processing/IO/file_reader.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/map_processing/IO/file_reader.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/map_processing/UI/console_interface.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/map_processing/UI/console_interface.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/map_processing/grid_processing/grid_tracer.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/map_processing/grid_processing/grid_tracer.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/map_processing/map_processing.h" beforeDir="false" afterPath="$PROJECT_DIR$/map_processing/map_processing.h" afterDir="false" />
-    </list>
+    <list default="true" id="9a77bb91-28bd-446d-98f2-7a53f1bba650" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
