@@ -291,8 +291,6 @@ namespace map_processing {
                     vector<pair<size_t, float>> houses_belongs_to_station;
                     for (const auto &i: hs_table->house_station_table) {
                         if (i.second == station_index) {
-                            using processing_types::Station;
-                            using processing_types::House;
                             houses_belongs_to_station.emplace_back(i.first, calculate_distance_between_hs(
                                     hs_table->house_table[i.first], hs_table->station_table[i.second]));
                         }
