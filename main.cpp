@@ -8,7 +8,9 @@
 
 #ifdef __unix__
 #define UNIX_USER
+
 #include <ncurses.h>
+
 #endif
 
 
@@ -352,7 +354,7 @@ namespace map_processing {
                                     hs_table->house_table[i.first], hs_table->station_table[i.second]));
                         }
                     }
-                    sort(houses_belongs_to_station.begin(), houses_belongs_to_station.end(), [](auto a, auto b){
+                    sort(houses_belongs_to_station.begin(), houses_belongs_to_station.end(), [](auto a, auto b) {
                         return a.second > b.second;
                     });
                     station_trace_cache.insert({station_index, houses_belongs_to_station});
@@ -380,7 +382,7 @@ namespace map_processing {
                                     hs_table->house_table[i.first], hs_table->station_table[i.second]));
                         }
                     }
-                    sort(houses_belongs_to_station.begin(), houses_belongs_to_station.end(), [](auto a, auto b){
+                    sort(houses_belongs_to_station.begin(), houses_belongs_to_station.end(), [](auto a, auto b) {
                         return a.second > b.second;
                     });
                     station_trace_cache.insert({station_index, houses_belongs_to_station});
@@ -390,7 +392,8 @@ namespace map_processing {
                 size_t counter = 0;
                 for (auto i: station_trace_cache[station_index]) {
                     counter++;
-                    houses += "\t" + house_to_string(hs_table->house_table[i.first]) + " (distance: "+ to_string(i.second)+")\n";
+                    houses += "\t" + house_to_string(hs_table->house_table[i.first]) + " (distance: " +
+                              to_string(i.second) + ")\n";
                 }
                 if (houses.empty()) {
                     return ret + " -> NO HOUSES FOUND";
@@ -460,11 +463,12 @@ namespace map_processing {
                     if (cool_mode_enabled) {
                         erase();
                         draw_all_instances_lines(hs_table);
-                        if(was_trace) {
+                        if (was_trace) {
                             Station current_station = hs_table->station_table[last_station_trace.first];
                             for (auto i: last_station_trace.second) {
                                 House current_house = hs_table->house_table[i];
-                                draw_instance_lines(current_house, current_station, hs_table->max_x, hs_table->max_y, '@');
+                                draw_instance_lines(current_house, current_station, hs_table->max_x, hs_table->max_y,
+                                                    '@');
                                 refresh();
                             }
                         }
@@ -490,7 +494,8 @@ namespace map_processing {
                             continue;
                         }
 
-                        pair<size_t, vector<size_t>> station_traces = commandProcessor->process_command_for_cool_mode(current_command);
+                        pair<size_t, vector<size_t>> station_traces = commandProcessor->process_command_for_cool_mode(
+                                current_command);
                         if (station_traces.second.empty()) {
                             last_message = "INVALID COMMAND";
                             continue;
@@ -510,14 +515,18 @@ namespace map_processing {
                         }
                         if (current_command == "HELP") {
                             commandProcessor->print_command_descriptions();
+                            cout
+                                    << "COOLMODE: [syntax COOLMODE] switch to simple map with houses and stations, you should resize your console for better resolution"
+                                    << endl;
                         } else if (current_command == "COOLMODE") {
 
 #ifdef UNIX_USER
-                            cout << "WARNING!" <<endl << "in coolmode only STATTRACE and HOUSEREL are available!" << endl << "continue[y/n]";
+                            cout << "WARNING!" << endl << "in coolmode only STATTRACE and HOUSEREL are available!"
+                                 << endl << "continue[y/n]";
                             string temp;
                             getline(cin, temp);
                             strip(temp);
-                            if(temp != "y"){
+                            if (temp != "y") {
                                 continue;
                             }
                             cool_mode_enabled = !cool_mode_enabled;
@@ -539,6 +548,7 @@ namespace map_processing {
         private:
 
 #ifdef UNIX_USER
+
             static void draw_all_instances_lines(shared_ptr<HouseStationTable> &hs_table) {
                 for (auto i: hs_table->house_station_table) {
                     House current_house = hs_table->house_table[i.first];
@@ -547,7 +557,9 @@ namespace map_processing {
                 }
             }
 
-            static void draw_instance_lines(House& current_house, Station& current_station, uint32_t max_x, uint32_t max_y, char c){
+            static void
+            draw_instance_lines(House &current_house, Station &current_station, uint32_t max_x, uint32_t max_y,
+                                char c) {
                 float s_x = (float) current_station.x_center / (float) max_x;
                 float s_y = (float) current_station.y_center / (float) max_y;
                 float h_x = (float) current_house.x_center / (float) max_x;
@@ -558,15 +570,19 @@ namespace map_processing {
             static void subscribe_all_instances(shared_ptr<HouseStationTable> &hs_table) {
                 for (auto i: hs_table->house_table) {
                     House ch = i.second;
-                    float h_x = (hs_table->max_x != 0) ? static_cast<float>(ch.x_center) / static_cast<float>(hs_table->max_x) : 0;
-                    float h_y = (hs_table->max_y != 0) ? static_cast<float>(ch.y_center) / static_cast<float>(hs_table->max_y) : 0;
+                    float h_x = (hs_table->max_x != 0) ? static_cast<float>(ch.x_center) /
+                                                         static_cast<float>(hs_table->max_x) : 0;
+                    float h_y = (hs_table->max_y != 0) ? static_cast<float>(ch.y_center) /
+                                                         static_cast<float>(hs_table->max_y) : 0;
                     cool_mode_draw_centered_text(h_x, h_y, "HOUSE" + to_string(ch.house_number));
                 }
 
                 for (auto i: hs_table->station_table) {
                     Station cs = i.second;
-                    float s_x = (hs_table->max_x != 0) ? static_cast<float>(cs.x_center) / static_cast<float>(hs_table->max_x) : 0;
-                    float s_y = (hs_table->max_y != 0) ? static_cast<float>(cs.y_center) / static_cast<float>(hs_table->max_y) : 0;
+                    float s_x = (hs_table->max_x != 0) ? static_cast<float>(cs.x_center) /
+                                                         static_cast<float>(hs_table->max_x) : 0;
+                    float s_y = (hs_table->max_y != 0) ? static_cast<float>(cs.y_center) /
+                                                         static_cast<float>(hs_table->max_y) : 0;
                     cool_mode_draw_centered_text(s_x, s_y, "STATION" + to_string(cs.station_number));
                 }
             }
@@ -604,8 +620,8 @@ namespace map_processing {
                 int maxY, maxX;
                 getmaxyx(stdscr, maxY, maxX);
 
-                int x = static_cast<int>(x_norm * (float)maxX);
-                int y = static_cast<int>(y_norm * (float)(maxY - 2)) + 1;
+                int x = static_cast<int>(x_norm * (float) maxX);
+                int y = static_cast<int>(y_norm * (float) (maxY - 2)) + 1;
 
                 int len = static_cast<int>(text.length());
                 int startX = x - len / 2;
@@ -619,10 +635,10 @@ namespace map_processing {
                 int maxY, maxX;
                 getmaxyx(stdscr, maxY, maxX);
 
-                int x1 = static_cast<int>((float)maxX * x_1);
-                int y1 = static_cast<int>((float)(maxY - 2) * y_1) + 1;
-                int x2 = static_cast<int>((float)maxX * x_2);
-                int y2 = static_cast<int>((float)(maxY - 2) * y_2) + 1;
+                int x1 = static_cast<int>((float) maxX * x_1);
+                int y1 = static_cast<int>((float) (maxY - 2) * y_1) + 1;
+                int x2 = static_cast<int>((float) maxX * x_2);
+                int y2 = static_cast<int>((float) (maxY - 2) * y_2) + 1;
 
                 int dx = std::abs(x2 - x1);
                 int dy = std::abs(y2 - y1);
@@ -648,6 +664,7 @@ namespace map_processing {
                     }
                 }
             }
+
 #endif
             bool cool_mode_enabled = false;
         };
