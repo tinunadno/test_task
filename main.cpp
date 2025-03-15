@@ -45,6 +45,7 @@ namespace map_processing {
     class DataProcessor {
     public:
         DataProcessor() = default;
+
         virtual shared_ptr<ProcessingData> process(shared_ptr<ProcessingData>) = 0;
 
         virtual ~DataProcessor() = default;
@@ -78,7 +79,15 @@ namespace map_processing {
         }
     }
 
+    namespace math_utils {
+        auto distance_func = [](uint32_t x1, uint32_t y1, uint32_t x2, u_int32_t y2) {
+            return (float) sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+        };
+    }
+
     namespace processing_types {
+        using math_utils::distance_func;
+
         class TextData : public ProcessingData {
         public:
             string text;
@@ -123,6 +132,10 @@ namespace map_processing {
                    to_string(current_station.y_center) + "}}";
         }
 
+        float calculate_distance_between_hs(House &h, Station &s) {
+            return distance_func(h.x_center, h.y_center, s.x_center, s.y_center);
+        }
+
         class HouseStationSet : public ProcessingData {
         public:
             HouseStationSet() = default;
@@ -143,30 +156,35 @@ namespace map_processing {
         using processing_types::HouseStationTable;
         using processing_types::house_to_string;
         using processing_types::station_to_string;
-        using namespace string_utils;
+        using string_utils::strip;
+        using processing_types::calculate_distance_between_hs;
 
         class CommandProcessor {
         public:
-            explicit CommandProcessor(shared_ptr<HouseStationTable>& hs_table)
+            explicit CommandProcessor(shared_ptr<HouseStationTable> &hs_table)
                     : hs_table(hs_table) {
                 command_map["SELECT"] = &CommandProcessor::handle_select;
                 command_map["SHOW"] = &CommandProcessor::handle_show;
                 command_map["STATTRACE"] = &CommandProcessor::handle_stat_trace;
                 command_map["HOUSEREL"] = &CommandProcessor::handle_house_rel;
-                command_descriptions.emplace_back("SELECT", "[syntax: SELECT <HOUSES/STATIONS> <index>] show house or station with certain index");
-                command_descriptions.emplace_back("SHOW", "[syntax: SHOW <HOUSES/STATIONS>] show all instances of house or station");
-                command_descriptions.emplace_back("STATTRACE", "[syntax: STATTRACE <index>] showing all the houses, connected to a certain station");
-                command_descriptions.emplace_back("HOUSEREL", "[syntax: HOUSEREL <index/ALL>] showing all houses and stations they are connected");
+                command_descriptions.emplace_back("SELECT",
+                                                  "[syntax: SELECT <HOUSES/STATIONS> <index>] show house or station with certain index");
+                command_descriptions.emplace_back("SHOW",
+                                                  "[syntax: SHOW <HOUSES/STATIONS>] show all instances of house or station");
+                command_descriptions.emplace_back("STATTRACE",
+                                                  "[syntax: STATTRACE <index>] showing all the houses, connected to a certain station");
+                command_descriptions.emplace_back("HOUSEREL",
+                                                  "[syntax: HOUSEREL <index/ALL>] showing all houses and stations they are connected");
             }
 
-            void print_command_descriptions(){
+            void print_command_descriptions() {
                 cout << "AVAILABLE COMMANDS:" << endl;
-                for(const auto& i: command_descriptions){
+                for (const auto &i: command_descriptions) {
                     cout << i.first << ": " << i.second << endl;
                 }
             }
 
-            string process_command(const string& command) {
+            string process_command(const string &command) {
                 string stripped_command = command;
                 strip(stripped_command);
 
@@ -189,7 +207,7 @@ namespace map_processing {
             }
 
         private:
-            string handle_select(string& args) {
+            string handle_select(string &args) {
                 size_t split_index = find_split_index(args);
                 if (split_index == string::npos) {
                     return "INVALID SELECT COMMAND, type help to see all available commands";
@@ -200,27 +218,27 @@ namespace map_processing {
                 return select_command(table_name, index);
             }
 
-            string handle_show(string& args) {
+            string handle_show(string &args) {
                 transform(args.begin(), args.end(), args.begin(), ::toupper);
                 return show_command(args);
             }
 
-            string handle_stat_trace(string& args) {
+            string handle_stat_trace(string &args) {
                 transform(args.begin(), args.end(), args.begin(), ::toupper);
                 return station_trace(stoi(args));
             }
 
-            string handle_house_rel(string& args){
-                if(args == "ALL"){
+            string handle_house_rel(string &args) {
+                if (args == "ALL") {
                     return house_relations(args);
-                }else{
+                } else {
                     return house_rel_by_index(args);
                 }
             }
 
-            static size_t find_split_index(const string& str) {
+            static size_t find_split_index(const string &str) {
                 const string attempt_characters = " \t";
-                for (char c : attempt_characters) {
+                for (char c: attempt_characters) {
                     size_t index = str.find(c);
                     if (index != string::npos) {
                         return index;
@@ -229,7 +247,7 @@ namespace map_processing {
                 return string::npos;
             }
 
-            string select_command(const string& table_name, size_t index) {
+            string select_command(const string &table_name, size_t index) {
                 if (table_name == "HOUSE") {
                     auto it = hs_table->house_table.find(index);
                     if (it == hs_table->house_table.end()) {
@@ -246,17 +264,17 @@ namespace map_processing {
                 return "NO MATCHING TABLE FOUND!";
             }
 
-            string show_command(const string& table_name) {
+            string show_command(const string &table_name) {
                 string ret;
                 if (table_name == "HOUSE") {
-                    for (const auto& i : hs_table->house_station_table) {
+                    for (const auto &i: hs_table->house_station_table) {
                         auto current_house = hs_table->house_table[i.first];
-                        ret += house_to_string(current_house)+"\n";
+                        ret += house_to_string(current_house) + "\n";
                     }
                 } else if (table_name == "STATION") {
-                    for (const auto& i : hs_table->station_table) {
+                    for (const auto &i: hs_table->station_table) {
                         auto current_station = i.second;
-                        ret += station_to_string(current_station)+"\n";
+                        ret += station_to_string(current_station) + "\n";
                     }
                 } else {
                     ret = "NO MATCHING TABLE FOUND!";
@@ -265,25 +283,31 @@ namespace map_processing {
             }
 
             string station_trace(size_t station_index) {
-                if (hs_table->station_table.find(station_index) == hs_table->station_table.end()){
+                if (hs_table->station_table.find(station_index) == hs_table->station_table.end()) {
                     return "NO MATCHING STATIONS FOUND";
                 }
                 auto it = station_trace_cache.find(station_index);
                 if (it == station_trace_cache.end()) {
-                    vector<size_t> houses_belongs_to_station;
-                    for (const auto& i : hs_table->house_station_table) {
+                    vector<pair<size_t, float>> houses_belongs_to_station;
+                    for (const auto &i: hs_table->house_station_table) {
                         if (i.second == station_index) {
-                            houses_belongs_to_station.push_back(i.first);
+                            using processing_types::Station;
+                            using processing_types::House;
+                            houses_belongs_to_station.emplace_back(i.first, calculate_distance_between_hs(
+                                    hs_table->house_table[i.first], hs_table->station_table[i.second]));
                         }
                     }
+                    sort(houses_belongs_to_station.begin(), houses_belongs_to_station.end(), [](auto a, auto b){
+                        return a.second > b.second;
+                    });
                     station_trace_cache.insert({station_index, houses_belongs_to_station});
                 }
                 string ret = station_to_string(hs_table->station_table[station_index]);
                 string houses;
                 size_t counter = 0;
-                for (auto i : station_trace_cache[station_index]) {
+                for (auto i: station_trace_cache[station_index]) {
                     counter++;
-                    houses += "\t" + house_to_string(hs_table->house_table[i]) + "\n";
+                    houses += "\t" + house_to_string(hs_table->house_table[i.first]) + " (distance: "+ to_string(i.second)+")\n";
                 }
                 if (houses.empty()) {
                     return ret + " -> NO HOUSES FOUND";
@@ -291,35 +315,38 @@ namespace map_processing {
                 return ret + " (TOTAL " + to_string(counter) + ") ->{\n" + houses + "}";
             }
 
-            string house_relations(string& args){
+            string house_relations(string &args) {
                 string ret;
-                for(auto i: hs_table->house_station_table){
-                    ret += house_to_string(hs_table->house_table[i.first]) + " <- " + station_to_string(hs_table->station_table[i.second]) + "\n";
+                for (auto i: hs_table->house_station_table) {
+                    ret += house_to_string(hs_table->house_table[i.first]) + " <- " +
+                           station_to_string(hs_table->station_table[i.second]) + "\n";
                 }
                 return ret;
             }
-            string house_rel_by_index(string& args){
+
+            string house_rel_by_index(string &args) {
                 size_t house_index = stoi(args);
                 auto it = hs_table->house_table.find(house_index);
-                if(it == hs_table->house_table.end()){
+                if (it == hs_table->house_table.end()) {
                     return "NO MATCHING HOUSES FOUND";
                 }
                 string ret;
                 size_t station_index = hs_table->house_station_table[house_index];
-                ret += house_to_string(hs_table->house_table[house_index]) + " -> " + station_to_string(hs_table->station_table[station_index]);
+                ret += house_to_string(hs_table->house_table[house_index]) + " -> " +
+                       station_to_string(hs_table->station_table[station_index]);
                 return ret;
             }
 
-            using CommandHandler = string (CommandProcessor::*)(string&);
+            using CommandHandler = string (CommandProcessor::*)(string &);
             unordered_map<string, CommandHandler> command_map;
             vector<pair<string, string>> command_descriptions;
 
             shared_ptr<HouseStationTable> hs_table;
-            unordered_map<size_t, vector<size_t>> station_trace_cache;
+            unordered_map<size_t, vector<pair<size_t, float>>> station_trace_cache;
         };
     }
 
-    namespace UI{
+    namespace UI {
         using processing_types::HouseStationTable;
         using tiny_database::CommandProcessor;
         using string_utils::strip;
@@ -327,25 +354,26 @@ namespace map_processing {
         class ConsoleUI : public FinalProcessingUnit {
         public:
             ConsoleUI() = default;
-            void process(shared_ptr<ProcessingData> data) override{
+
+            void process(shared_ptr<ProcessingData> data) override {
                 cout << "type *help* to start\n";
                 auto hs_table = dynamic_pointer_cast<HouseStationTable>(data);
-                if(!hs_table){
+                if (!hs_table) {
                     throw ProcessingDataTypeMissmatch("Type missmatch in ConsoleUI: expected HouseStationTable!");
                 }
                 auto commandProcessor = new CommandProcessor(hs_table);
                 string current_command;
-                while(true){
+                while (true) {
                     getline(cin, current_command);
                     strip(current_command);
                     transform(current_command.begin(), current_command.end(), current_command.begin(), ::toupper);
-                    if(current_command == "EXIT"){
+                    if (current_command == "EXIT") {
                         break;
                     }
-                    if(current_command == "HELP"){
+                    if (current_command == "HELP") {
                         commandProcessor->print_command_descriptions();
-                    }else {
-                         cout << commandProcessor->process_command(current_command) << endl;
+                    } else {
+                        cout << commandProcessor->process_command(current_command) << endl;
                     }
                 }
                 delete commandProcessor;
@@ -432,6 +460,7 @@ namespace map_processing {
         using processing_types::HouseStationSet;
         using processing_types::HouseStationTable;
         using processing_types::Station;
+        using math_utils::distance_func;
 
         class HousesStationTracer : public DataProcessor {
         public:
@@ -492,15 +521,12 @@ namespace map_processing {
                             "Data missmatch in HouseStationSetProcessor: expected HouseStationSet");
                 }
                 auto hs_table = make_shared<HouseStationTable>();
-                auto distance_func = [](uint32_t x1, uint32_t y1, uint32_t x2, u_int32_t y2) {
-                    return (float) sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
-                };
                 bool first_time = true;
                 for (auto i: hs_set->houses) {
                     float min_distance = 100000000000.0f;
                     Station min_distance_station = {0};
                     for (auto j: hs_set->stations) {
-                        if(first_time){
+                        if (first_time) {
                             hs_table->station_table.insert({j.station_number, j});
                         }
                         float current_distance = distance_func(i.x_center, i.y_center, j.x_center, j.y_center);
@@ -521,21 +547,24 @@ namespace map_processing {
 
     }
 
-    namespace pipeline{
+    namespace pipeline {
         using processing_types::TextData;
         using namespace IO;
         using namespace UI;
         using namespace processing_core;
         using namespace tiny_database;
-        class PipeLine{
+
+        class PipeLine {
         public:
-            explicit PipeLine(const vector<shared_ptr<DataProcessor>>& dp, shared_ptr<FinalProcessingUnit>& pl_ending): processors(dp), pipe_line_ending(pl_ending){}
-            void initiate_pipe_line(const shared_ptr<ProcessingData>& init_data){
+            explicit PipeLine(const vector<shared_ptr<DataProcessor>> &dp, shared_ptr<FinalProcessingUnit> &pl_ending)
+                    : processors(dp), pipe_line_ending(pl_ending) {}
+
+            void initiate_pipe_line(const shared_ptr<ProcessingData> &init_data) {
                 shared_ptr<ProcessingData> last_return = init_data;
-                while(true) {
+                while (true) {
                     try {
                         last_return = this->process_next(last_return);
-                        if(last_return == nullptr){
+                        if (last_return == nullptr) {
                             break;
                         }
                     } catch (ProcessingDataTypeMissmatch &e) {
@@ -545,20 +574,22 @@ namespace map_processing {
                     }
                 }
             }
-            shared_ptr<ProcessingData> process_next(shared_ptr<ProcessingData>& pd){
-                if(pipe_line_counter < processors.size()){
+
+            shared_ptr<ProcessingData> process_next(shared_ptr<ProcessingData> &pd) {
+                if (pipe_line_counter < processors.size()) {
                     return (processors[pipe_line_counter++])->process(pd);
                 }
                 pipe_line_ending->process(pd);
                 return nullptr;
             }
+
         private:
             vector<shared_ptr<DataProcessor>> processors;
             shared_ptr<FinalProcessingUnit> pipe_line_ending;
             size_t pipe_line_counter = 0;
         };
 
-        void start_map_processing(string& file_name){
+        void start_map_processing(string &file_name) {
             auto td = make_shared<TextData>();
             td->text = file_name;
             vector<shared_ptr<DataProcessor>> pd = {
