@@ -85,7 +85,15 @@ namespace map_processing {
         }
     }
 
+    namespace math_utils {
+        auto distance_func = [](uint32_t x1, uint32_t y1, uint32_t x2, u_int32_t y2) {
+            return (float) sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+        };
+    }
+
     namespace processing_types {
+        using math_utils::distance_func;
+
         class TextData : public ProcessingData {
         public:
             string text;
@@ -130,6 +138,10 @@ namespace map_processing {
                    to_string(current_station.y_center) + "}}";
         }
 
+        float calculate_distance_between_hs(House &h, Station &s) {
+            return distance_func(h.x_center, h.y_center, s.x_center, s.y_center);
+        }
+
         class HouseStationSet : public ProcessingData {
         public:
             HouseStationSet() = default;
@@ -154,7 +166,8 @@ namespace map_processing {
         using processing_types::HouseStationTable;
         using processing_types::house_to_string;
         using processing_types::station_to_string;
-        using namespace string_utils;
+        using string_utils::strip;
+        using processing_types::calculate_distance_between_hs;
 
         class CommandProcessor {
         public:
@@ -332,19 +345,23 @@ namespace map_processing {
                 }
                 auto it = station_trace_cache.find(station_index);
                 if (it == station_trace_cache.end()) {
-                    vector<size_t> houses_belongs_to_station;
+                    vector<pair<size_t, float>> houses_belongs_to_station;
                     for (const auto &i: hs_table->house_station_table) {
                         if (i.second == station_index) {
-                            houses_belongs_to_station.push_back(i.first);
+                            houses_belongs_to_station.emplace_back(i.first, calculate_distance_between_hs(
+                                    hs_table->house_table[i.first], hs_table->station_table[i.second]));
                         }
                     }
+                    sort(houses_belongs_to_station.begin(), houses_belongs_to_station.end(), [](auto a, auto b){
+                        return a.second > b.second;
+                    });
                     station_trace_cache.insert({station_index, houses_belongs_to_station});
                 }
                 pair<size_t, vector<size_t>> ret;
                 ret.first = station_index;
                 vector<size_t> houses;
                 for (auto i: station_trace_cache[station_index]) {
-                    houses.push_back(i);
+                    houses.push_back(i.first);
                 }
                 ret.second = houses;
                 return ret;
@@ -356,12 +373,16 @@ namespace map_processing {
                 }
                 auto it = station_trace_cache.find(station_index);
                 if (it == station_trace_cache.end()) {
-                    vector<size_t> houses_belongs_to_station;
+                    vector<pair<size_t, float>> houses_belongs_to_station;
                     for (const auto &i: hs_table->house_station_table) {
                         if (i.second == station_index) {
-                            houses_belongs_to_station.push_back(i.first);
+                            houses_belongs_to_station.emplace_back(i.first, calculate_distance_between_hs(
+                                    hs_table->house_table[i.first], hs_table->station_table[i.second]));
                         }
                     }
+                    sort(houses_belongs_to_station.begin(), houses_belongs_to_station.end(), [](auto a, auto b){
+                        return a.second > b.second;
+                    });
                     station_trace_cache.insert({station_index, houses_belongs_to_station});
                 }
                 string ret = station_to_string(hs_table->station_table[station_index]);
@@ -369,7 +390,7 @@ namespace map_processing {
                 size_t counter = 0;
                 for (auto i: station_trace_cache[station_index]) {
                     counter++;
-                    houses += "\t" + house_to_string(hs_table->house_table[i]) + "\n";
+                    houses += "\t" + house_to_string(hs_table->house_table[i.first]) + " (distance: "+ to_string(i.second)+")\n";
                 }
                 if (houses.empty()) {
                     return ret + " -> NO HOUSES FOUND";
@@ -406,7 +427,7 @@ namespace map_processing {
             unordered_map<string, CoolModeCommandHandler> cool_mode_command_map;
 
             shared_ptr<HouseStationTable> hs_table;
-            unordered_map<size_t, vector<size_t>> station_trace_cache;
+            unordered_map<size_t, vector<pair<size_t, float>>> station_trace_cache;
         };
     }
 
