@@ -1,3 +1,17 @@
 # ninja log v6
 1372	1490	1741987287419157443	test_task	9c72297b22712e49
-1	1372	1741987286048160050	CMakeFiles/test_task.dir/main.cpp.o	644a3a4af38a742f
+9	1276	1742038435833179975	CMakeFiles/test_task.dir/main.cpp.o	644a3a4af38a742f
+5	37	1742038470822426889	build.ninja	b9f6dde334feee74
+9	1123	1742038435833179975	CMakeFiles/test_task.dir/file_reader.cpp.o	33623845f7b095e7
+10	10531	1742038435834179983	CMakeFiles/test_task.dir/grid_tracer.cpp.o	ebcbb700c3607193
+10	947	1742038006149518379	CMakeFiles/test_task.dir/console_interface.cpp.o	612fbf47ecc82a46
+10	672	1742038435834179983	CMakeFiles/test_task.dir/stored_structures.cpp.o	3a10759be969bd35
+6	669	1742038582531014688	CMakeFiles/test_task.dir/stored_structures.cpp.o	3a10759be969bd35
+6	1002	1742038582531014688	CMakeFiles/test_task.dir/file_reader.cpp.o	33623845f7b095e7
+6	1031	1742038582531014688	CMakeFiles/test_task.dir/main.cpp.o	644a3a4af38a742f
+6	7830	1742038582531014688	CMakeFiles/test_task.dir/grid_tracer.cpp.o	ebcbb700c3607193
+7830	7955	1742038590355045514	test_task	a02ed6c12bc14de5
+6	5689	1742038702592359592	CMakeFiles/test_task.dir/grid_tracer.cpp.o	ebcbb700c3607193
+5689	5792	1742038708275369624	test_task	a02ed6c12bc14de5
+6	486	1742038967131354628	CMakeFiles/test_task.dir/file_reader.cpp.o	33623845f7b095e7
+486	591	1742038967611353878	test_task	a02ed6c12bc14de5

@@ -65,9 +65,6 @@ namespace map_processing {
                     bg::get<1>(query_result[0].first),
                     query_result[0].second
             };
-//            if(distributed_set->find(closest_station.number) == distributed_set->end()){
-//                (*distributed_set)[closest_station.number].emplace_back(i.number, 0);
-//            }else{
             (*distributed_set)[closest_station.number].emplace_back(i.number, (uint32_t) (sqrt(
                     (i.x - closest_station.x) * (i.x - closest_station.x) +
                     (i.y - closest_station.y) * (i.y - closest_station.y)

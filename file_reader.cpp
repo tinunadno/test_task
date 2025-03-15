@@ -21,7 +21,7 @@ namespace map_processing{
         fileStream.seekg(0, ios::end);
         size_t fileSize = fileStream.tellg();
         fileStream.seekg(sizeof(x_size) + sizeof(y_size), ios::beg);
-
+        fileSize -= sizeof(x_size) + sizeof(y_size);
         if (fileSize < vector_size) {
             throw ProcessingException("File is invalid, less grid, then expected");
         }
