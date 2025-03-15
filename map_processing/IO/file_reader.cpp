@@ -1,7 +1,7 @@
 #include <memory>
 #include <fstream>
-#include "stored_structures.h"
-#include "map_processing_exceptions.h"
+#include "../stored_structures.h"
+#include "../map_processing_exceptions.h"
 
 namespace map_processing{
     using namespace std;
