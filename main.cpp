@@ -566,9 +566,11 @@ namespace map_processing {
                             break;
                         }
                     } catch (ProcessingDataTypeMissmatch &e) {
-                        cout << e.what();
+                        cerr << e.what() << endl;
+                        break;
                     } catch (ProcessingException &e) {
-                        cout << e.what();
+                        cerr << e.what() << endl;
+                        break;
                     }
                 }
             }
