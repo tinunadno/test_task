@@ -9,7 +9,7 @@
 					"jsonFile" : "directory-.-Debug-f5ebdc15457944623624.json",
 					"minimumCMakeVersion" : 
 					{
-						"string" : "3.29"
+						"string" : "3.28.3"
 					},
 					"projectIndex" : 0,
 					"source" : ".",
@@ -39,7 +39,7 @@
 				{
 					"directoryIndex" : 0,
 					"id" : "test_task::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-test_task-Debug-27653cb2ac0c11d3c241.json",
+					"jsonFile" : "target-test_task-Debug-d50388307ca1b1d1300f.json",
 					"name" : "test_task",
 					"projectIndex" : 0
 				}
@@ -55,6 +55,6 @@
 	"version" : 
 	{
 		"major" : 2,
-		"minor" : 7
+		"minor" : 6
 	}
 }
