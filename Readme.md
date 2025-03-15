@@ -68,4 +68,4 @@
 
 ### Пример работы
 
-![Screencast from 2025-03-15 17-17-13.gif](Screencast%20from%202025-03-15%2017-17-13.gif)
+![example](content/example.gif) 
