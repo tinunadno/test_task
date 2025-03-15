@@ -14,7 +14,7 @@
 
 2.[парсинг](https://github.com/tinunadno/test_task/blob/simple_solution_branch/map_processing/grid_processing/grid_tracer.cpp)
 
-3.[взаимодействие с пользователем]()https://github.com/tinunadno/test_task/blob/simple_solution_branch/map_processing/UI/console_interface.cpp
+3.[взаимодействие с пользователем](https://github.com/tinunadno/test_task/blob/simple_solution_branch/map_processing/UI/console_interface.cpp)
 
 При этом все выполнено максимально приближенно к ТЗ
 
