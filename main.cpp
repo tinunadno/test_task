@@ -864,8 +864,10 @@ namespace map_processing {
                         }
                     } catch (ProcessingDataTypeMissmatch &e) {
                         cout << e.what();
+                        break;
                     } catch (ProcessingException &e) {
                         cout << e.what();
+                        break;
                     }
                 }
             }
@@ -903,7 +905,12 @@ namespace map_processing {
 
 using map_processing::pipeline::start_map_processing;
 
-int main() {
-    std::string file_name = "/home/yura/Applications/clion/clionProjects/test_task/data.dat";
+int main(int argc, char* argv[]) {
+    if(argc != 2){
+        std::cerr << "NO SOURCE FILE PATH WAS GIVEN" << std::endl;
+        std::cerr << "type ./test_task 'path_to_source_file' to process it" << std::endl;
+        return 1;
+    }
+    std::string file_name = argv[1];
     start_map_processing(file_name);
 }
