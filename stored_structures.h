@@ -16,7 +16,7 @@ namespace map_processing {
         SimpleArray(uint32_t x, uint32_t y) : x_size(x), y_size(y), grid(x * y) {}
 
         uint8_t get(uint32_t x, uint32_t y) const noexcept {
-            return grid[x * x_size + y];
+            return grid[y * x_size + x];
         }
 
         vector<uint8_t> grid;

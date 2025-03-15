@@ -29,7 +29,7 @@ namespace map_processing {
     using InstancesMap = unordered_map<size_t, vector<pair<size_t, uint32_t>>>;
 
     shared_ptr<InstancesMap> complete_grid_trace(shared_ptr<SimpleArray> &hs_map) {
-        bg_i::rtree <Value, bg_i::quadratic<16>> stations_rtree;
+        bg_i::rtree<Value, bg_i::quadratic<16>> stations_rtree;
         vector<House> houses;
         size_t station_counter = 0;
         size_t house_counter = 0;
@@ -41,13 +41,20 @@ namespace map_processing {
                     std::cout << station_to_string({j, i, station_counter}) << endl;
                 }
                 if (hs_map->get(j, i) == 1) {
-                    auto [x_house_size, y_house_size] = calculate_house_bounds(hs_map, i, j);
-                    uint32_t tmp = j;
-                    j = x_house_size;
-                    uint32_t middle_x_cords = tmp + (x_house_size - tmp) / 2;
-                    uint32_t middle_y_cords = i + (y_house_size - i) / 2;
-                    houses.push_back(
-                            {middle_x_cords, middle_y_cords, x_house_size - tmp, y_house_size - i, house_counter++});
+                    if (i != 0 && hs_map->get(j, i - 1) == 1) {
+                        while (j < hs_map->x_size - 1 && hs_map->get(j + 1, i) == 1) {
+                            j++;
+                        }
+                    } else {
+                        auto [x_house_size, y_house_size] = calculate_house_bounds(hs_map, i, j);
+                        uint32_t tmp = j;
+                        j = x_house_size;
+                        uint32_t middle_x_cords = tmp + (x_house_size - tmp) / 2;
+                        uint32_t middle_y_cords = i + (y_house_size - i) / 2;
+                        houses.push_back(
+                                {middle_x_cords, middle_y_cords, x_house_size - tmp, y_house_size - i,
+                                 house_counter++});
+                    }
                 }
             }
         }
