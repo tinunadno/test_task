@@ -99,7 +99,8 @@
 			[
 				2,
 				4,
-				7
+				7,
+				8
 			]
 		}
 	],
@@ -114,40 +115,45 @@
 		{
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
-			"path" : "file_reader.cpp",
+			"path" : "map_processing/IO/file_reader.cpp",
 			"sourceGroupIndex" : 0
 		},
 		{
 			"backtrace" : 1,
-			"path" : "map_processing_exceptions.h",
+			"path" : "map_processing/map_processing_exceptions.h",
 			"sourceGroupIndex" : 1
 		},
 		{
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
-			"path" : "grid_tracer.cpp",
+			"path" : "map_processing/grid_processing/grid_tracer.cpp",
 			"sourceGroupIndex" : 0
 		},
 		{
 			"backtrace" : 1,
-			"path" : "map_processing.h",
+			"path" : "map_processing/map_processing.h",
 			"sourceGroupIndex" : 1
 		},
 		{
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
-			"path" : "console_interface.cpp",
+			"path" : "map_processing/UI/console_interface.cpp",
 			"sourceGroupIndex" : 0
 		},
 		{
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
-			"path" : "stored_structures.cpp",
+			"path" : "map_processing/stored_structures/stored_structures.cpp",
 			"sourceGroupIndex" : 0
 		},
 		{
 			"backtrace" : 1,
-			"path" : "stored_structures.h",
+			"path" : "map_processing/stored_structures/stored_structures.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "map_processing/string_utils.h",
 			"sourceGroupIndex" : 1
 		}
 	],

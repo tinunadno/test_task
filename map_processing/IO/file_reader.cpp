@@ -1,6 +1,6 @@
 #include <memory>
 #include <fstream>
-#include "../stored_structures.h"
+#include "../stored_structures/stored_structures.h"
 #include "../map_processing_exceptions.h"
 
 namespace map_processing{

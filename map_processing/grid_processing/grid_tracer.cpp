@@ -1,6 +1,6 @@
 #include <unordered_map>
 #include <memory>
-#include "stored_structures.h"
+#include "../stored_structures/stored_structures.h"
 #include <boost/geometry.hpp>
 #include <boost/geometry/index/rtree.hpp>
 
@@ -25,8 +25,7 @@ namespace map_processing {
     namespace bg_i = boost::geometry::index;
     using Point = bg::model::point<uint32_t, 2, bg::cs::cartesian>;
     using Value = pair<Point, size_t>;
-
-    using InstancesMap = unordered_map<size_t, vector<pair<size_t, uint32_t>>>;
+    using InstancesMap = unordered_map<size_t, pair<vector<pair<size_t, uint32_t>>, bool>>;
 
     shared_ptr<InstancesMap> complete_grid_trace(shared_ptr<SimpleArray> &hs_map) {
         bg_i::rtree<Value, bg_i::quadratic<16>> stations_rtree;
@@ -72,10 +71,11 @@ namespace map_processing {
                     bg::get<1>(query_result[0].first),
                     query_result[0].second
             };
-            (*distributed_set)[closest_station.number].emplace_back(i.number, (uint32_t) (sqrt(
+            (*distributed_set)[closest_station.number].first.emplace_back(i.number, (uint32_t) (sqrt(
                     (i.x - closest_station.x) * (i.x - closest_station.x) +
                     (i.y - closest_station.y) * (i.y - closest_station.y)
             )));
+            (*distributed_set)[closest_station.number].second = false;
         }
         return distributed_set;
     }
